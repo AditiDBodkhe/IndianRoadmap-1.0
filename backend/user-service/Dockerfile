@@ -1,0 +1,15 @@
+FROM eclipse-temurin:26-jdk-alpine AS builder
+WORKDIR /app
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+RUN ./mvnw dependency:go-offline -q
+COPY src/ src/
+RUN ./mvnw package -DskipTests -q
+
+FROM eclipse-temurin:26-jre-alpine
+WORKDIR /app
+RUN addgroup -S usersvc && adduser -S usersvc -G usersvc
+COPY --from=builder /app/target/*.jar app.jar
+USER usersvc
+EXPOSE 8086
+ENTRYPOINT ["java", "-jar", "app.jar"]

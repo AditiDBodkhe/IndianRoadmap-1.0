@@ -1,0 +1,15 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/indianroadmap_users_test
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration
+      - org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
+
+indianroadmap:
+  security:
+    jwt:
+      secret: test-secret-key-that-is-at-least-32-characters-long-for-testing
+      access-token-expiration-seconds: 900
+      refresh-token-expiration-seconds: 2592000

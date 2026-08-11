@@ -1,0 +1,19 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/indianroadmap_audio
+
+indianroadmap:
+  services:
+    story:
+      base-url: http://localhost:8083
+
+audio:
+  storage:
+    path: ./data/audio
+  tts:
+    provider: MOCK
+
+logging:
+  level:
+    com.indianroadmap: DEBUG

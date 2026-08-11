@@ -1,0 +1,11 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/indianroadmap_recommendations_test
+
+indianroadmap:
+  services:
+    destination:
+      base-url: http://localhost:8081
+    story:
+      base-url: http://localhost:8083

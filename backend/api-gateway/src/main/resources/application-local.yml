@@ -1,0 +1,15 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+indianroadmap:
+  services:
+    destination: http://localhost:8081
+    roadmap: http://localhost:8082
+    story: http://localhost:8083
+    audio: http://localhost:8084
+    recommendation: http://localhost:8085
+    user: http://localhost:8086
+  cors:
+    allowed-origins: http://localhost:4200

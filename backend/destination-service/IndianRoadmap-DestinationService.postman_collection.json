@@ -1,0 +1,905 @@
+{
+  "info": {
+    "name": "IndianRoadmap — Destination Service",
+    "description": "Complete REST API collection for the destination-service microservice.\n\nBase URL: http://localhost:8081\n\nRun requests in order — the 'Create Destination' request auto-saves the returned ID into the collection variable {{destinationId}}, which is used by Get/Update/Delete requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "destinationId",
+      "value": "",
+      "type": "string",
+      "description": "Auto-populated by the 'Create Destination' request test script"
+    },
+    {
+      "key": "destinationSlug",
+      "value": "chhitkul",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Actuator Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Spring Boot Actuator health check. Returns service status and MongoDB connection status."
+          },
+          "response": [
+            {
+              "name": "Health UP",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"UP\",\n  \"components\": {\n    \"mongo\": { \"status\": \"UP\" },\n    \"ping\": { \"status\": \"UP\" }\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Health status is UP', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('UP');",
+                  "    pm.expect(body.components.mongo.status).to.eql('UP');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Destinations — CRUD",
+      "item": [
+        {
+          "name": "Create Destination",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"chhitkul\",\n  \"name\": {\n    \"defaultName\": \"Chhitkul\",\n    \"localName\": \"Chhitkul\"\n  },\n  \"state\": \"Himachal Pradesh\",\n  \"district\": \"Kinnaur\",\n  \"region\": \"Kinnaur\",\n  \"shortDescription\": \"India's last inhabited village near the Indo-Tibet border\",\n  \"description\": \"Chhitkul is a small village in the Sangla Valley in the Kinnaur district of Himachal Pradesh. It is the last inhabited village near the Indo-Tibet border.\",\n  \"latitude\": 31.35,\n  \"longitude\": 78.44,\n  \"elevationMeters\": 3450,\n  \"elevationFeet\": 11319,\n  \"categories\": [\"VILLAGE\", \"HERITAGE\", \"BORDER\"],\n  \"moods\": [\"ADVENTURE\", \"SOLITUDE\", \"HERITAGE\"],\n  \"languages\": [\"ENGLISH\", \"HINDI\", \"KINNAURI\"],\n  \"historicalHighlights\": [\n    {\n      \"era\": \"Ancient\",\n      \"title\": \"Last Indo-Tibet Trade Route Village\",\n      \"description\": \"Historically a stop on the old Indo-Tibet trade route\"\n    }\n  ],\n  \"culturalInformation\": {\n    \"traditions\": \"Kinnauri Buddhist traditions\",\n    \"cuisine\": \"Traditional Kinnauri food\",\n    \"festivals\": [\"Losar\", \"Fagli\"],\n    \"attire\": \"Traditional Kinnauri cap and shawl\",\n    \"notes\": \"\"\n  },\n  \"architecture\": {\n    \"style\": \"Himalayan timber and stone\",\n    \"materials\": \"Local stone and wood\",\n    \"period\": \"Medieval to contemporary\",\n    \"notableFeatures\": \"Traditional Kinnauri architecture with flat roofs\"\n  },\n  \"attractions\": [\n    {\n      \"name\": \"Chhitkul Temple\",\n      \"type\": \"TEMPLE\",\n      \"description\": \"Ancient temple dedicated to local deity\"\n    },\n    {\n      \"name\": \"Baspa River\",\n      \"type\": \"NATURE\",\n      \"description\": \"Scenic Baspa River flowing through the valley\"\n    }\n  ],\n  \"images\": [\n    {\n      \"url\": \"\",\n      \"caption\": \"Chhitkul village view\",\n      \"photographer\": \"\",\n      \"source\": \"\"\n    }\n  ],\n  \"sources\": [\n    {\n      \"title\": \"Himachal Pradesh Tourism\",\n      \"publisher\": \"Government of Himachal Pradesh\",\n      \"url\": \"https://himachaltourism.gov.in\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Create a new destination. Returns 201 Created with the full destination object.\n\nThe test script automatically saves the returned ID into {{destinationId}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "",
+                  "pm.test('Response structure is valid', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body.data).to.have.property('id');",
+                  "    pm.expect(body.data.slug).to.eql('chhitkul');",
+                  "    pm.expect(body.data.coordinates.latitude).to.eql(31.35);",
+                  "    pm.expect(body.data.coordinates.longitude).to.eql(78.44);",
+                  "    pm.expect(body.data.elevation.meters).to.eql(3450);",
+                  "    // Save ID for subsequent requests",
+                  "    pm.collectionVariables.set('destinationId', body.data.id);",
+                  "    pm.collectionVariables.set('destinationSlug', body.data.slug);",
+                  "    console.log('Saved destinationId:', body.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Destination by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/{{destinationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "{{destinationId}}"]
+            },
+            "description": "Fetch a single destination by its MongoDB ObjectId.\n\n{{destinationId}} is auto-set by the Create request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Correct destination returned', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body.data.id).to.eql(pm.collectionVariables.get('destinationId'));",
+                  "    pm.expect(body.data).to.have.property('elevation');",
+                  "    pm.expect(body.data).to.have.property('coordinates');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Destination by Slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/slug/{{destinationSlug}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "slug", "{{destinationSlug}}"]
+            },
+            "description": "Fetch a destination by its URL-safe slug (e.g. 'chhitkul', 'adi-kailash').\n\nSlugs are case-insensitive and normalized server-side."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Correct slug returned', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body.data.slug).to.eql(pm.collectionVariables.get('destinationSlug'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Destination",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/{{destinationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "{{destinationId}}"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shortDescription\": \"India's last inhabited village near the Indo-Tibet border — updated\",\n  \"moods\": [\"ADVENTURE\", \"SOLITUDE\", \"HERITAGE\", \"WILD\"],\n  \"attractions\": [\n    {\n      \"name\": \"Chhitkul Temple\",\n      \"type\": \"TEMPLE\",\n      \"description\": \"Ancient temple dedicated to local deity\"\n    },\n    {\n      \"name\": \"Baspa River\",\n      \"type\": \"NATURE\",\n      \"description\": \"Scenic Baspa River flowing through the valley\"\n    },\n    {\n      \"name\": \"Indo-Tibet Border Viewpoint\",\n      \"type\": \"VIEWPOINT\",\n      \"description\": \"Last motorable road viewpoint towards the Tibet border\"\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Partially update a destination. Only fields present in the request body are updated.\n\nAll fields in UpdateDestinationRequest are optional — omit any field to leave it unchanged."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Field updated', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body.data.shortDescription).to.include('updated');",
+                  "    pm.expect(body.data.moods).to.include('WILD');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Destination",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/{{destinationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "{{destinationId}}"]
+            },
+            "description": "Delete a destination by ID. Returns 204 No Content on success."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));",
+                  "pm.test('Body is empty', () => pm.expect(pm.response.text()).to.eql(''));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Destinations — Search & Filter",
+      "item": [
+        {
+          "name": "List All Destinations (default page)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            },
+            "description": "List all destinations with pagination. Returns summary cards (not full detail)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Paginated response structure', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "    pm.expect(body.meta).to.have.all.keys('page', 'size', 'totalElements', 'totalPages');",
+                  "    pm.expect(body.meta.page).to.eql(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter by State",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations?state=Himachal Pradesh&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"],
+              "query": [
+                { "key": "state", "value": "Himachal Pradesh" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            },
+            "description": "Filter destinations by state name."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('All results from correct state', () => {",
+                  "    const body = pm.response.json();",
+                  "    body.data.forEach(d => pm.expect(d.state).to.eql('Himachal Pradesh'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter by State + Region",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations?state=Himachal Pradesh&region=Kinnaur&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"],
+              "query": [
+                { "key": "state", "value": "Himachal Pradesh" },
+                { "key": "region", "value": "Kinnaur" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            },
+            "description": "Combine state and region filters."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Results match filters', () => {",
+                  "    const body = pm.response.json();",
+                  "    body.data.forEach(d => {",
+                  "        pm.expect(d.state).to.eql('Himachal Pradesh');",
+                  "        pm.expect(d.region).to.eql('Kinnaur');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter by Mood (ADVENTURE)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations?mood=ADVENTURE&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"],
+              "query": [
+                { "key": "mood", "value": "ADVENTURE" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            },
+            "description": "Filter by mood tag. Valid values: ZEN, ADVENTURE, CURIOUS, HERITAGE, SPIRITUAL, SOLITUDE, WILD, PATRIOTIC"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('All results have ADVENTURE mood', () => {",
+                  "    const body = pm.response.json();",
+                  "    body.data.forEach(d => pm.expect(d.moods).to.include('ADVENTURE'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter by Category (VILLAGE)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations?category=VILLAGE&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"],
+              "query": [
+                { "key": "category", "value": "VILLAGE" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            },
+            "description": "Filter by category. Valid values: VILLAGE, CITY, TEMPLE, MONASTERY, MOUNTAIN, PASS, HERITAGE, HISTORICAL, SCIENTIFIC, ADVENTURE, SPIRITUAL, BORDER"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('All results are VILLAGEs', () => {",
+                  "    const body = pm.response.json();",
+                  "    body.data.forEach(d => pm.expect(d.categories).to.include('VILLAGE'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter by State + Mood (combined)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations?state=Ladakh&mood=SOLITUDE&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"],
+              "query": [
+                { "key": "state", "value": "Ladakh" },
+                { "key": "mood", "value": "SOLITUDE" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            },
+            "description": "Combine any filters: state, region, category, mood all work together with AND logic."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Results match both filters', () => {",
+                  "    const body = pm.response.json();",
+                  "    body.data.forEach(d => {",
+                  "        pm.expect(d.state).to.eql('Ladakh');",
+                  "        pm.expect(d.moods).to.include('SOLITUDE');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pagination — Page 2",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations?page=1&size=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "3" }
+              ]
+            },
+            "description": "Pages are 0-indexed. page=1 is the second page."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Correct page number in meta', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.meta.page).to.eql(1);",
+                  "    pm.expect(body.meta.size).to.eql(3);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Destinations — Geospatial",
+      "item": [
+        {
+          "name": "Nearby — near Kaza (100km)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/nearby?latitude=32.22&longitude=78.07&radius=100000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "nearby"],
+              "query": [
+                { "key": "latitude", "value": "32.22", "description": "Kaza latitude" },
+                { "key": "longitude", "value": "78.07", "description": "Kaza longitude" },
+                { "key": "radius", "value": "100000", "description": "100km in meters" }
+              ]
+            },
+            "description": "Find destinations within a given radius.\n\nParameters:\n- latitude: -90 to +90\n- longitude: -180 to +180\n- radius: meters (e.g. 50000 = 50km)\n\nUses MongoDB 2dsphere geospatial index internally. Results are not sorted by distance in the current implementation."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns nearby destinations', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "    pm.expect(body.data.length).to.be.greaterThan(0);",
+                  "    console.log('Nearby destinations:', body.data.map(d => d.slug));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nearby — near Hanle (200km)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/nearby?latitude=32.77&longitude=78.96&radius=200000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "nearby"],
+              "query": [
+                { "key": "latitude", "value": "32.77", "description": "Hanle latitude" },
+                { "key": "longitude", "value": "78.96", "description": "Hanle longitude" },
+                { "key": "radius", "value": "200000", "description": "200km in meters" }
+              ]
+            },
+            "description": "Nearby search centered on Hanle, Ladakh."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns nearby destinations', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nearby — near Amritsar (10km)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/nearby?latitude=31.63&longitude=74.87&radius=10000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "nearby"],
+              "query": [
+                { "key": "latitude", "value": "31.63" },
+                { "key": "longitude", "value": "74.87" },
+                { "key": "radius", "value": "10000", "description": "10km — should only return Amritsar" }
+              ]
+            },
+            "description": "Small radius — only destinations very close to Amritsar are returned."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Only Amritsar within 10km', () => {",
+                  "    const body = pm.response.json();",
+                  "    const slugs = body.data.map(d => d.slug);",
+                  "    console.log('Within 10km of Amritsar:', slugs);",
+                  "    pm.expect(slugs).to.include('amritsar');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Error Scenarios",
+      "item": [
+        {
+          "name": "404 — Destination Not Found (by ID)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/000000000000000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "000000000000000000000000"]
+            },
+            "description": "Non-existent ID returns 404 with structured error response."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('Error response structure', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.false;",
+                  "    pm.expect(body.error.code).to.eql('DESTINATION_NOT_FOUND');",
+                  "    pm.expect(body.error.message).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 — Destination Not Found (by slug)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/slug/this-slug-does-not-exist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "slug", "this-slug-does-not-exist"]
+            },
+            "description": "Unknown slug returns 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('Error code correct', () => {",
+                  "    pm.expect(pm.response.json().error.code).to.eql('DESTINATION_NOT_FOUND');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "409 — Duplicate Slug",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"chhitkul\",\n  \"name\": { \"defaultName\": \"Chhitkul Duplicate\", \"localName\": \"\" },\n  \"state\": \"Himachal Pradesh\",\n  \"region\": \"Kinnaur\",\n  \"latitude\": 31.35,\n  \"longitude\": 78.44,\n  \"elevationMeters\": 3450,\n  \"elevationFeet\": 11319\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Trying to create a destination with an already-existing slug returns 409 Conflict."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('Duplicate error code', () => {",
+                  "    pm.expect(pm.response.json().error.code).to.eql('DUPLICATE_DESTINATION');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 — Validation Error (blank required fields)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"\",\n  \"name\": { \"defaultName\": \"\", \"localName\": \"\" },\n  \"state\": \"\",\n  \"region\": \"\",\n  \"latitude\": 0,\n  \"longitude\": 0,\n  \"elevationMeters\": 0,\n  \"elevationFeet\": 0\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Blank required fields trigger Jakarta validation and return 400 with field-level errors."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Validation error structure', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.success).to.be.false;",
+                  "    pm.expect(body.error.code).to.eql('VALIDATION_ERROR');",
+                  "    pm.expect(body.error.fields).to.be.an('object');",
+                  "    console.log('Validation fields:', JSON.stringify(body.error.fields, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 — Invalid Coordinates",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"bad-coords\",\n  \"name\": { \"defaultName\": \"Bad Coords\", \"localName\": \"\" },\n  \"state\": \"Himachal Pradesh\",\n  \"region\": \"Kinnaur\",\n  \"latitude\": 999.0,\n  \"longitude\": -999.0,\n  \"elevationMeters\": 3450,\n  \"elevationFeet\": 11319\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Coordinates outside valid range (-90/+90 lat, -180/+180 lon) are rejected."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 — Invalid Nearby Search Radius",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/nearby?latitude=32.22&longitude=78.07&radius=-100",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "nearby"],
+              "query": [
+                { "key": "latitude", "value": "32.22" },
+                { "key": "longitude", "value": "78.07" },
+                { "key": "radius", "value": "-100", "description": "Negative radius is invalid" }
+              ]
+            },
+            "description": "Negative radius is rejected by DestinationValidator."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Error code is INVALID_DESTINATION', () => {",
+                  "    pm.expect(pm.response.json().error.code).to.eql('INVALID_DESTINATION');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Seed Data (pre-seeded with local profile)",
+      "item": [
+        {
+          "name": "Get Chhitkul",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/slug/chhitkul",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "slug", "chhitkul"]
+            },
+            "description": "Chhitkul — seeded by DestinationDataInitializer on local/dev profile."
+          }
+        },
+        {
+          "name": "Get Hanle",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/slug/hanle",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "slug", "hanle"]
+            }
+          }
+        },
+        {
+          "name": "Get Turtuk",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/slug/turtuk",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "slug", "turtuk"]
+            }
+          }
+        },
+        {
+          "name": "Get Mana",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/slug/mana",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "slug", "mana"]
+            }
+          }
+        },
+        {
+          "name": "Get Amritsar",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/slug/amritsar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "slug", "amritsar"]
+            }
+          }
+        },
+        {
+          "name": "Get Hussainiwala",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/destinations/slug/hussainiwala",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "destinations", "slug", "hussainiwala"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OpenAPI",
+      "item": [
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/swagger-ui/index.html",
+              "host": ["{{baseUrl}}"],
+              "path": ["swagger-ui", "index.html"]
+            },
+            "description": "Interactive API documentation. Open in browser."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Swagger UI is available', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "OpenAPI JSON Spec",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v3/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["v3", "api-docs"]
+            },
+            "description": "Raw OpenAPI 3.0 JSON spec — useful for importing into other tools."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('OpenAPI spec is available', () => pm.response.to.have.status(200));",
+                  "pm.test('Has paths', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('paths');",
+                  "    pm.expect(body.paths).to.have.property('/api/v1/destinations');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

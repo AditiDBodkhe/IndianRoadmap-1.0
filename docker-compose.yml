@@ -1,0 +1,294 @@
+version: "3.9"
+
+networks:
+  indianroadmap-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  audio_data:
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────
+  # MongoDB
+  # ─────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:8
+    container_name: indianroadmap-mongodb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MONGODB_PORT:-27017}:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - indianroadmap-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping').ok", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ─────────────────────────────────────────────────────────────────
+  # Destination Service  (:8081)
+  # ─────────────────────────────────────────────────────────────────
+  destination-service:
+    build:
+      context: ./backend/destination-service
+      dockerfile: Dockerfile
+    container_name: indianroadmap-destination
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SERVER_PORT=8081
+      - MONGODB_URI=mongodb://mongodb:27017/indianroadmap_destinations
+    networks:
+      - indianroadmap-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 45s
+
+  # ─────────────────────────────────────────────────────────────────
+  # Roadmap Service  (:8082)
+  # ─────────────────────────────────────────────────────────────────
+  roadmap-service:
+    build:
+      context: ./backend/roadmap-service
+      dockerfile: Dockerfile
+    container_name: indianroadmap-roadmap
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SERVER_PORT=8082
+      - MONGODB_URI=mongodb://mongodb:27017/indianroadmap_roadmaps
+      - DESTINATION_SERVICE_URL=http://destination-service:8081
+    networks:
+      - indianroadmap-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      destination-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 45s
+
+  # ─────────────────────────────────────────────────────────────────
+  # Story Service  (:8083)
+  # ─────────────────────────────────────────────────────────────────
+  story-service:
+    build:
+      context: ./backend/story-service
+      dockerfile: Dockerfile
+    container_name: indianroadmap-story
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SERVER_PORT=8083
+      - MONGODB_URI=mongodb://mongodb:27017/indianroadmap_stories
+      - DESTINATION_SERVICE_URL=http://destination-service:8081
+    networks:
+      - indianroadmap-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      destination-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 45s
+
+  # ─────────────────────────────────────────────────────────────────
+  # User Service  (:8086)
+  # ─────────────────────────────────────────────────────────────────
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: indianroadmap-user
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SERVER_PORT=8086
+      - MONGODB_URI=mongodb://mongodb:27017/indianroadmap_users
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_EXPIRATION=900
+      - JWT_REFRESH_EXPIRATION=2592000
+    networks:
+      - indianroadmap-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 45s
+
+  # ─────────────────────────────────────────────────────────────────
+  # Audio Service  (:8084)
+  # ─────────────────────────────────────────────────────────────────
+  audio-service:
+    build:
+      context: ./backend/audio-service
+      dockerfile: Dockerfile
+    container_name: indianroadmap-audio
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SERVER_PORT=8084
+      - MONGODB_URI=mongodb://mongodb:27017/indianroadmap_audio
+      - STORY_SERVICE_URL=http://story-service:8083
+      - TTS_PROVIDER=MOCK
+      - AUDIO_STORAGE_PATH=/app/data/audio
+    volumes:
+      - audio_data:/app/data/audio
+    networks:
+      - indianroadmap-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      story-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 45s
+
+  # ─────────────────────────────────────────────────────────────────
+  # Recommendation Service  (:8085)
+  # ─────────────────────────────────────────────────────────────────
+  recommendation-service:
+    build:
+      context: ./backend/recommendation-service
+      dockerfile: Dockerfile
+    container_name: indianroadmap-recommendation
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SERVER_PORT=8085
+      - MONGODB_URI=mongodb://mongodb:27017/indianroadmap_recommendations
+      - DESTINATION_SERVICE_URL=http://destination-service:8081
+      - STORY_SERVICE_URL=http://story-service:8083
+    networks:
+      - indianroadmap-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      destination-service:
+        condition: service_healthy
+      story-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+
+  # ─────────────────────────────────────────────────────────────────
+  # AI Service  (:8090)
+  # ─────────────────────────────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./backend/ai-service
+      dockerfile: Dockerfile
+    container_name: indianroadmap-ai
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PORT=8090
+      - DESTINATION_SERVICE_URL=http://destination-service:8081
+      - ROADMAP_SERVICE_URL=http://roadmap-service:8082
+      - STORY_SERVICE_URL=http://story-service:8083
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:8085
+    networks:
+      - indianroadmap-network
+    depends_on:
+      destination-service:
+        condition: service_healthy
+      roadmap-service:
+        condition: service_healthy
+      story-service:
+        condition: service_healthy
+      recommendation-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  # ─────────────────────────────────────────────────────────────────
+  # API Gateway  (:8080) — single public entry point
+  # ─────────────────────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: indianroadmap-gateway
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SERVER_PORT=8080
+      - JWT_SECRET=${JWT_SECRET}
+      - DESTINATION_SERVICE_URL=http://destination-service:8081
+      - ROADMAP_SERVICE_URL=http://roadmap-service:8082
+      - STORY_SERVICE_URL=http://story-service:8083
+      - AUDIO_SERVICE_URL=http://audio-service:8084
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:8085
+      - USER_SERVICE_URL=http://user-service:8086
+      - AI_SERVICE_URL=http://ai-service:8090
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      - GATEWAY_CONNECT_TIMEOUT_MS=${GATEWAY_CONNECT_TIMEOUT_MS:-3000}
+      - GATEWAY_RESPONSE_TIMEOUT_MS=${GATEWAY_RESPONSE_TIMEOUT_MS:-10000}
+    ports:
+      - "8080:8080"
+    networks:
+      - indianroadmap-network
+    depends_on:
+      user-service:
+        condition: service_healthy
+      destination-service:
+        condition: service_healthy
+      roadmap-service:
+        condition: service_healthy
+      story-service:
+        condition: service_healthy
+      audio-service:
+        condition: service_healthy
+      recommendation-service:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s

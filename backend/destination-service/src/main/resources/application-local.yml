@@ -1,0 +1,10 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/destination-db-local
+
+logging:
+  level:
+    com.indianroadmap: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.web: DEBUG

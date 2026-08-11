@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.indianroadmap.gateway.GatewayRoutingSpec
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.857 s -- in com.indianroadmap.gateway.GatewayRoutingSpec

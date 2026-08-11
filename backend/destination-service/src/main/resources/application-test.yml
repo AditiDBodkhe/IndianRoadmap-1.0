@@ -1,0 +1,9 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/destination-db-test
+
+logging:
+  level:
+    com.indianroadmap: DEBUG
+    org.springframework.data.mongodb: WARN

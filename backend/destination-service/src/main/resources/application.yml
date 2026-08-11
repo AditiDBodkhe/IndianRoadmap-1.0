@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: destination-service
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/destination-db}
+      auto-index-creation: true
+
+  threads:
+    virtual:
+      enabled: true
+
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false
+
+server:
+  port: ${SERVER_PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: destination-service
+    description: IndianRoadmap Destination Service
+    version: 0.0.1-SNAPSHOT
+
+logging:
+  level:
+    com.indianroadmap: INFO
+    org.springframework.data.mongodb: WARN

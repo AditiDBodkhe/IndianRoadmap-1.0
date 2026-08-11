@@ -1,0 +1,24 @@
+$breakpoints: (
+  sm: 640px,
+  md: 768px,
+  lg: 960px,
+  xl: 1200px
+);
+
+@mixin respond($size) {
+  @media (max-width: map-get($breakpoints, $size)) {
+    @content;
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

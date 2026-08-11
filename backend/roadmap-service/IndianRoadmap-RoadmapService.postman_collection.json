@@ -1,0 +1,458 @@
+{
+  "info": {
+    "name": "IndianRoadmap — Roadmap Service",
+    "description": "Complete REST API collection for roadmap-service (port 8082).\n\nWorkflow:\n1. Create a Roadmap → roadmapId is auto-captured\n2. Add Nodes (requires destination-service on 8081 for valid destinationIds)\n3. Add Edges between nodes\n4. Publish the Roadmap\n\nVariables:\n- {{baseUrl}}      → http://localhost:8082\n- {{roadmapId}}   → auto-set by 'Create Roadmap'\n- {{nodeId}}       → auto-set by 'Add Node'\n- {{edgeId}}       → auto-set by 'Add Edge'",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "roadmap-service-v1"
+  },
+  "variable": [
+    { "key": "baseUrl",    "value": "http://localhost:8082", "type": "string" },
+    { "key": "roadmapId",  "value": "",                      "type": "string" },
+    { "key": "nodeId",     "value": "",                      "type": "string" },
+    { "key": "nodeId2",    "value": "",                      "type": "string" },
+    { "key": "edgeId",     "value": "",                      "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "01 — Health & Info",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/actuator/health", "host": ["{{baseUrl}}"], "path": ["actuator","health"] }
+          }
+        },
+        {
+          "name": "Actuator Info",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/actuator/info", "host": ["{{baseUrl}}"], "path": ["actuator","info"] }
+          }
+        },
+        {
+          "name": "OpenAPI Spec (JSON)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api-docs", "host": ["{{baseUrl}}"], "path": ["api-docs"] }
+          }
+        },
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/swagger-ui.html", "host": ["{{baseUrl}}"], "path": ["swagger-ui.html"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 — Roadmap CRUD",
+      "item": [
+        {
+          "name": "Create Roadmap",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.success && json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('roadmapId', json.data.id);",
+                  "    console.log('roadmapId set to: ' + json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"spiti-valley-circuit\",\n  \"name\": \"Spiti Valley Circuit\",\n  \"description\": \"An epic journey through the Spiti Valley — monasteries, cold deserts, high passes\",\n  \"status\": \"DRAFT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Roadmaps",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roadmaps?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","roadmaps"],
+              "query": [
+                { "key": "page",   "value": "0"  },
+                { "key": "size",   "value": "20" },
+                { "key": "status", "value": "",   "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List DRAFT Roadmaps",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roadmaps?status=DRAFT&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","roadmaps"],
+              "query": [
+                { "key": "status", "value": "DRAFT" },
+                { "key": "page",   "value": "0"  },
+                { "key": "size",   "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List PUBLISHED Roadmaps",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roadmaps?status=PUBLISHED&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","roadmaps"],
+              "query": [
+                { "key": "status", "value": "PUBLISHED" },
+                { "key": "page",   "value": "0" },
+                { "key": "size",   "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Roadmap by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}"] }
+          }
+        },
+        {
+          "name": "Get Roadmap by Slug",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/slug/spiti-valley-circuit", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","slug","spiti-valley-circuit"] }
+          }
+        },
+        {
+          "name": "Update Roadmap",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Spiti Valley Grand Circuit\",\n  \"description\": \"Extended journey through Spiti, Kinnaur and Lahaul valleys\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Roadmap",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — Nodes",
+      "item": [
+        {
+          "name": "Add Node — START (Shimla)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.success && json.data && json.data.nodes && json.data.nodes.length > 0) {",
+                  "    var nodes = json.data.nodes;",
+                  "    pm.collectionVariables.set('nodeId', nodes[0].nodeId);",
+                  "    console.log('nodeId set to: ' + nodes[0].nodeId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationId\": \"REPLACE_WITH_REAL_DESTINATION_ID\",\n  \"sequence\": 1,\n  \"label\": \"Shimla\",\n  \"role\": \"START\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Node — WAYPOINT (Narkanda)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.success && json.data && json.data.nodes && json.data.nodes.length > 0) {",
+                  "    var nodes = json.data.nodes;",
+                  "    var last = nodes[nodes.length - 1];",
+                  "    pm.collectionVariables.set('nodeId2', last.nodeId);",
+                  "    console.log('nodeId2 set to: ' + last.nodeId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationId\": \"REPLACE_WITH_REAL_DESTINATION_ID\",\n  \"sequence\": 2,\n  \"label\": \"Narkanda\",\n  \"role\": \"WAYPOINT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Node — HIGHLIGHT (Chhitkul)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationId\": \"REPLACE_WITH_REAL_DESTINATION_ID\",\n  \"sequence\": 3,\n  \"label\": \"Chhitkul\",\n  \"role\": \"HIGHLIGHT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Node — END (Kaza)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationId\": \"REPLACE_WITH_REAL_DESTINATION_ID\",\n  \"sequence\": 4,\n  \"label\": \"Kaza\",\n  \"role\": \"END\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Nodes",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes"] }
+          }
+        },
+        {
+          "name": "Get Single Node",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes/{{nodeId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes","{{nodeId}}"] }
+          }
+        },
+        {
+          "name": "Update Node",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes/{{nodeId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes","{{nodeId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sequence\": 1,\n  \"label\": \"Shimla (Updated)\",\n  \"role\": \"START\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reorder Nodes",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes/reorder", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes","reorder"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nodeIds\": [\n    \"{{nodeId2}}\",\n    \"{{nodeId}}\"\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Node",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes/{{nodeId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes","{{nodeId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 — Edges",
+      "item": [
+        {
+          "name": "Add Edge — HIGHWAY Easy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.success && json.data && json.data.edges && json.data.edges.length > 0) {",
+                  "    var edges = json.data.edges;",
+                  "    pm.collectionVariables.set('edgeId', edges[0].edgeId);",
+                  "    console.log('edgeId set to: ' + edges[0].edgeId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/edges", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","edges"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromNodeId\": \"{{nodeId}}\",\n  \"toNodeId\": \"{{nodeId2}}\",\n  \"distanceKm\": 65.5,\n  \"estimatedTravelTimeMinutes\": 120,\n  \"roadType\": \"HIGHWAY\",\n  \"difficulty\": \"EASY\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Edge — MOUNTAIN_ROAD Difficult",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/edges", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","edges"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromNodeId\": \"{{nodeId2}}\",\n  \"toNodeId\": \"REPLACE_WITH_NODE_ID\",\n  \"distanceKm\": 125.0,\n  \"estimatedTravelTimeMinutes\": 300,\n  \"roadType\": \"MOUNTAIN_ROAD\",\n  \"difficulty\": \"DIFFICULT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Edges",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/edges", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","edges"] }
+          }
+        },
+        {
+          "name": "Update Edge",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/edges/{{edgeId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","edges","{{edgeId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distanceKm\": 68.0,\n  \"estimatedTravelTimeMinutes\": 110,\n  \"roadType\": \"STATE_HIGHWAY\",\n  \"difficulty\": \"MODERATE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Edge",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/edges/{{edgeId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","edges","{{edgeId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 — Lifecycle",
+      "item": [
+        {
+          "name": "Publish Roadmap",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/publish", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","publish"] }
+          }
+        },
+        {
+          "name": "Archive Roadmap",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/archive", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","archive"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 — Error Cases",
+      "item": [
+        {
+          "name": "404 — Roadmap Not Found",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/nonexistent-id", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","nonexistent-id"] }
+          }
+        },
+        {
+          "name": "409 — Duplicate Slug",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"great-himalayan-roadmap\",\n  \"name\": \"Duplicate\",\n  \"description\": \"This should return 409\"\n}"
+            }
+          }
+        },
+        {
+          "name": "400 — Validation Error (blank name)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"valid-slug\",\n  \"name\": \"\",\n  \"description\": \"blank name should return 400\"\n}"
+            }
+          }
+        },
+        {
+          "name": "400 — Invalid Status Transition (ARCHIVED → PUBLISHED)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/publish", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","publish"] }
+          }
+        },
+        {
+          "name": "400 — Publish Without Enough Nodes",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/publish", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","publish"] }
+          }
+        },
+        {
+          "name": "404 — Destination Not Found on Add Node",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/nodes", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","nodes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationId\": \"bad-destination-id\",\n  \"sequence\": 1,\n  \"label\": \"Ghost\",\n  \"role\": \"WAYPOINT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "400 — Self-loop Edge",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/roadmaps/{{roadmapId}}/edges", "host": ["{{baseUrl}}"], "path": ["api","v1","roadmaps","{{roadmapId}}","edges"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromNodeId\": \"{{nodeId}}\",\n  \"toNodeId\": \"{{nodeId}}\",\n  \"distanceKm\": 10.0,\n  \"estimatedTravelTimeMinutes\": 30,\n  \"roadType\": \"LOCAL_ROAD\",\n  \"difficulty\": \"EASY\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

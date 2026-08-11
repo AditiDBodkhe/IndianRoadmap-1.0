@@ -1,0 +1,4 @@
+logging:
+  level:
+    com.indianroadmap.user: DEBUG
+    org.springframework.data.mongodb: WARN

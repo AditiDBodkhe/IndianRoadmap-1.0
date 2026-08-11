@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: user-service
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/indianroadmap_users}
+      auto-index-creation: true
+  threads:
+    virtual:
+      enabled: true
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false
+
+server:
+  port: ${SERVER_PORT:8086}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    try-it-out-enabled: true
+
+indianroadmap:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:dev-secret-key-at-least-32-chars-long-for-hs256}
+      access-token-expiration-seconds: ${JWT_ACCESS_EXPIRATION:900}
+      refresh-token-expiration-seconds: ${JWT_REFRESH_EXPIRATION:2592000}
